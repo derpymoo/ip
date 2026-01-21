@@ -14,58 +14,124 @@ public class Shinchan {
     public void run() {
         greet();
         Scanner scanner = new Scanner(System.in);
+
         while (true) {
             String input = scanner.nextLine();
-            if (input.equalsIgnoreCase("bye")) {
-                exit();
-                break;
-            } else if (input.equalsIgnoreCase("list")) {
-                printList();
-            } else if (input.startsWith("mark")) {
-                String[] parts = input.split(" ");
-                int index = Integer.parseInt(parts[1]) - 1;
-                Task item = list.get(index);
-                item.markAsDone();
-                printList();
-            } else if (input.contains("unmark")) {
-                String[] parts = input.split(" ");
-                int index = Integer.parseInt(parts[1]) - 1;
-                Task item = list.get(index);
-                item.markAsUndone();
-                printList();
-            } else {
-                echo(input);
+            String instruction = input.split(" ", 2)[0].toLowerCase();
+            switch (instruction) {
+                case "todo":
+                    newToDos(input);
+                    break;
+                case "list":
+                    printList();
+                    break;
+                case "deadline":
+                    newDeadlines(input);
+                    break;
+                case "event":
+                    newEvents(input);
+                    break;
+                case "mark":
+                    int index = Integer.parseInt(input.split(" ")[1]) - 1;
+                    markTask(index);
+                    break;
+                case "unmark":
+                    int idx = Integer.parseInt(input.split(" ")[1]) - 1;
+                    unmarkTask(idx);
+                    break;
+                case "bye":
+                    exit();
+                    scanner.close();
+                    return;
+
+                default:
+                    Task item = new Task(input);
+                    list.add(item);
+                    echo(item);
             }
         }
-        scanner.close();
+
     }
 
-    public void echo(String input) {
-        System.out.println(LINE);
-        Task item = new Task(input);
+    public void newToDos(String input) {
+        String[] parts = input.split(" ", 2);
+        Task item = new ToDos(parts[1]);
         list.add(item);
-        System.out.println("added: " + input);
-        System.err.println(LINE);
+        echo(item);
+    }
+
+    public void newDeadlines(String input) {
+        String[] parts = input.split(" ", 2); // split into "deadline" and the rest
+        String[] desctime = parts[1].split(" /by ", 2); // split into description and due date
+        Task item = new Deadlines(desctime[0], desctime[1]);
+        list.add(item);
+        echo(item);
+    }
+
+    public void newEvents(String input) {
+        String[] fromSplit = input.split("/from", 2);
+        String description = fromSplit[0].replaceFirst("event ", "").trim();
+        String timing = fromSplit[1].trim();
+        String[] toSplit = timing.split("/to", 2);
+        String from = toSplit[0].trim();
+        String to = toSplit[1].trim();
+        Task item = new Events(description, from, to);
+        list.add(item);
+        echo(item);
+    }
+
+    public void echo(Task item) {
+        System.out.println(LINE);
+        System.out.println("Got it. I've added this task:");
+        System.out.println(item.toString());
+        System.out.println("Now you have " + list.size() + " tasks in the list.");
+        System.out.println(LINE);
     }
 
     public void greet() {
         System.out.println(LINE);
         System.out.println("Hello! I'm Shinchan!");
-        System.err.println("What can I do for you?");
-        System.err.println(LINE);
+        System.out.println("What can I do for you?");
+        System.out.println(LINE);
     }
 
     public void exit() {
         System.out.println(LINE);
         System.out.println("Bye. Hope to see you again soon!");
-        System.err.println(LINE);
+        System.out.println(LINE);
     }
 
     public void printList() {
         System.out.println(LINE);
+        System.out.println("Here are the tasks in your list:");
         for (int i = 0; i < list.size(); i++) {
             System.out.println(i + 1 + "." + list.get(i).toString());
         }
-        System.err.println(LINE);
+        System.out.println(LINE);
     }
+
+    public void markTask(int index) {
+        if (index < 0 || index >= list.size()) {
+            System.out.println("Invalid task number.");
+            return;
+        }
+        Task item = list.get(index);
+        item.markAsDone();
+        System.out.println(LINE);
+        System.out.println(item.toString());
+        System.out.println(LINE);
+    }
+
+    public void unmarkTask(int index) {
+        if (index < 0 || index >= list.size()) {
+            System.out.println("Invalid task number.");
+            return;
+        }
+        Task item = list.get(index);
+        item.markAsUndone();
+        System.out.println(LINE);
+        System.out.println(item.toString());
+        System.out.println(LINE);
+    }
+
 }
