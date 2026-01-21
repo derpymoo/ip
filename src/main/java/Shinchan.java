@@ -1,9 +1,10 @@
 import java.util.Scanner;
+
 import java.util.ArrayList;
 
 public class Shinchan {
     private static final String LINE = "----------------------------------------";
-    public ArrayList<String> list = new ArrayList<>();
+    public ArrayList<Task> list = new ArrayList<>();
 
     public static void main(String[] args) {
         Shinchan shinchan = new Shinchan();
@@ -19,13 +20,20 @@ public class Shinchan {
                 exit();
                 break;
             } else if (input.equalsIgnoreCase("list")) {
-                System.out.println(LINE);
-                for (int i = 0; i < list.size(); i++) {
-                    System.out.println((i + 1) + ". " + list.get(i));
-                }
-                System.err.println(LINE);
+                printList();
+            } else if (input.startsWith("mark")) {
+                String[] parts = input.split(" ");
+                int index = Integer.parseInt(parts[1]) - 1;
+                Task item = list.get(index);
+                item.markAsDone();
+                printList();
+            } else if (input.contains("unmark")) {
+                String[] parts = input.split(" ");
+                int index = Integer.parseInt(parts[1]) - 1;
+                Task item = list.get(index);
+                item.markAsUndone();
+                printList();
             } else {
-                list.add(input);
                 echo(input);
             }
         }
@@ -34,6 +42,8 @@ public class Shinchan {
 
     public void echo(String input) {
         System.out.println(LINE);
+        Task item = new Task(input);
+        list.add(item);
         System.out.println("added: " + input);
         System.err.println(LINE);
     }
@@ -48,6 +58,14 @@ public class Shinchan {
     public void exit() {
         System.out.println(LINE);
         System.out.println("Bye. Hope to see you again soon!");
+        System.err.println(LINE);
+    }
+
+    public void printList() {
+        System.out.println(LINE);
+        for (int i = 0; i < list.size(); i++) {
+            System.out.println(i + 1 + "." + list.get(i).toString());
+        }
         System.err.println(LINE);
     }
 }
