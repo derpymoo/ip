@@ -1,7 +1,9 @@
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Shinchan {
     private static final String LINE = "----------------------------------------";
+    public ArrayList<String> list = new ArrayList<>();
 
     public static void main(String[] args) {
         Shinchan shinchan = new Shinchan();
@@ -16,7 +18,14 @@ public class Shinchan {
             if (input.equalsIgnoreCase("bye")) {
                 exit();
                 break;
+            } else if (input.equalsIgnoreCase("list")) {
+                System.out.println(LINE);
+                for (int i = 0; i < list.size(); i++) {
+                    System.out.println((i + 1) + ". " + list.get(i));
+                }
+                System.err.println(LINE);
             } else {
+                list.add(input);
                 echo(input);
             }
         }
@@ -25,7 +34,7 @@ public class Shinchan {
 
     public void echo(String input) {
         System.out.println(LINE);
-        System.out.println(input);
+        System.out.println("added: " + input);
         System.err.println(LINE);
     }
 
@@ -37,6 +46,7 @@ public class Shinchan {
     }
 
     public void exit() {
+        System.out.println(LINE);
         System.out.println("Bye. Hope to see you again soon!");
         System.err.println(LINE);
     }
