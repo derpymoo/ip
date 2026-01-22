@@ -1,8 +1,9 @@
-import java.util.Scanner;
 
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Shinchan {
+
     private static final String LINE = "----------------------------------------";
     public ArrayList<Task> list = new ArrayList<>();
 
