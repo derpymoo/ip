@@ -16,42 +16,67 @@ public class Shinchan {
         greet();
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            String input = scanner.nextLine();
-            String instruction = input.split(" ", 2)[0].toLowerCase();
-            switch (instruction) {
-                case "todo":
-                    newToDos(input);
-                    break;
-                case "list":
-                    printList();
-                    break;
-                case "deadline":
-                    newDeadlines(input);
-                    break;
-                case "event":
-                    newEvents(input);
-                    break;
-                case "mark":
-                    int index = Integer.parseInt(input.split(" ")[1]) - 1;
-                    markTask(index);
-                    break;
-                case "unmark":
-                    int idx = Integer.parseInt(input.split(" ")[1]) - 1;
-                    unmarkTask(idx);
-                    break;
-                case "bye":
-                    exit();
-                    scanner.close();
-                    return;
+        while (scanner.hasNextLine()) {
+            try {
+                String input = scanner.nextLine().trim();
 
-                default:
-                    Task item = new Task(input);
-                    list.add(item);
-                    echo(item);
+                if (input.isEmpty()) {
+                    throw new ShinchanException("Input cannot be empty. Please enter a valid command.");
+                }
+
+                String instruction = input.split(" ", 2)[0].toLowerCase();
+
+                switch (instruction) {
+                    case "todo":
+                        if (input.length() == 4) {
+                            throw new ShinchanException("The description of a todo cannot be empty.");
+                        }
+                        newToDos(input);
+                        break;
+
+                    case "list":
+                        printList();
+                        break;
+                    case "deadline":
+                        if (input.indexOf("deadline ") + 9 >= input.indexOf(" /by ")) {
+                            throw new ShinchanException("The description of a deadline cannot be empty.");
+                        }
+                        if (!input.contains(" /by ")) {
+                            throw new ShinchanException("The deadline command must include '/by' followed by the due date.");
+                        }
+                        newDeadlines(input);
+                        break;
+                    case "event":
+                        if (input.indexOf("event ") + 6 >= input.indexOf("/from")) {
+                            throw new ShinchanException("The description of an event cannot be empty.");
+                        }
+                        if (!input.contains("/from") || !input.contains("/to")) {
+                            throw new ShinchanException("The event command must include '/from' and '/to' followed by the respective times.");
+                        }
+                        newEvents(input);
+                        break;
+                    case "mark":
+                        int index = Integer.parseInt(input.split(" ")[1]) - 1;
+                        markTask(index);
+                        break;
+                    case "unmark":
+                        int idx = Integer.parseInt(input.split(" ")[1]) - 1;
+                        unmarkTask(idx);
+                        break;
+                    case "bye":
+                        exit();
+                        scanner.close();
+                        return;
+
+                    default:
+                        throw new ShinchanException("I'm sorry, but I don't know what that means.");
+                }
+            } catch (ShinchanException e) {
+                System.out.println(LINE);
+                System.out.println(e.getMessage());
+                System.out.println(LINE);
             }
         }
-
     }
 
     public void newToDos(String input) {
