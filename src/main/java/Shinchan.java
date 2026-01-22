@@ -68,6 +68,14 @@ public class Shinchan {
                         scanner.close();
                         return;
 
+                    case "delete":
+                        int delIndex = Integer.parseInt(input.split(" ")[1]) - 1;
+                        if (delIndex < 0 || delIndex >= list.size()) {
+                            throw new ShinchanException("Invalid task number for deletion.");
+                        }
+                        deleteTask(delIndex);
+                        break;
+
                     default:
                         throw new ShinchanException("I'm sorry, but I don't know what that means.");
                 }
@@ -77,6 +85,15 @@ public class Shinchan {
                 System.out.println(LINE);
             }
         }
+    }
+
+    public void deleteTask(int index) {
+        Task item = list.remove(index);
+        System.out.println(LINE);
+        System.out.println("Noted. I've removed this task:");
+        System.out.println(item.toString());
+        System.out.println("Now you have " + list.size() + " tasks in the list.");
+        System.out.println(LINE);
     }
 
     public void newToDos(String input) {
