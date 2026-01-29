@@ -1,3 +1,5 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +25,8 @@ public class Shinchan {
             "The description of a deadline cannot be empty.";
     private static final String messageDeadlineMissingBy =
             "The deadline command must include '/by' followed by the due date.";
+    private static final String messageDeadlineBadDate =
+            "Date must be in yyyy-MM-dd format.";
     private static final String messageEventEmpty =
             "The description of an event cannot be empty.";
     private static final String messageEventMissingTime =
@@ -35,7 +39,9 @@ public class Shinchan {
 
     private final List<Task> tasks;
     private final Storage storage;
-
+    /**
+     * Creates a Shinchan chatbot instance and loads tasks from disk.
+     */
     public Shinchan() {
         tasks = new ArrayList<>();
         storage = new Storage(dataFilePath);
@@ -123,7 +129,7 @@ public class Shinchan {
 
         Task task = new Todos(description);
         tasks.add(task);
-        storage.save(tasks); // SAVE
+        storage.save(tasks);
         printAdded(task);
     }
 
@@ -142,9 +148,10 @@ public class Shinchan {
             throw new ShinchanException(messageDeadlineEmpty);
         }
 
-        Task task = new Deadlines(description, by);
+        LocalDate dueDate = parseDate(by);
+        Task task = new Deadlines(description, dueDate);
         tasks.add(task);
-        storage.save(tasks); // SAVE
+        storage.save(tasks);
         printAdded(task);
     }
 
@@ -166,7 +173,7 @@ public class Shinchan {
 
         Task task = new Events(description, toParts[0].trim(), toParts[1].trim());
         tasks.add(task);
-        storage.save(tasks); // SAVE
+        storage.save(tasks);
         printAdded(task);
     }
 
@@ -178,7 +185,7 @@ public class Shinchan {
 
         Task task = tasks.get(index);
         task.markAsDone();
-        storage.save(tasks); // SAVE
+        storage.save(tasks);
         printBoxedMessage(task.toString());
     }
 
@@ -190,7 +197,7 @@ public class Shinchan {
 
         Task task = tasks.get(index);
         task.markAsUndone();
-        storage.save(tasks); // SAVE
+        storage.save(tasks);
         printBoxedMessage(task.toString());
     }
 
@@ -201,12 +208,20 @@ public class Shinchan {
         }
 
         Task removed = tasks.remove(index);
-        storage.save(tasks); // SAVE
+        storage.save(tasks);
         printLine();
         System.out.println("Noted. I've removed this task:");
         System.out.println(removed);
         System.out.println("Now you have " + tasks.size() + " tasks in the list.");
         printLine();
+    }
+
+    private LocalDate parseDate(String text) throws ShinchanException {
+        try {
+            return LocalDate.parse(text.trim());
+        } catch (DateTimeParseException e) {
+            throw new ShinchanException(messageDeadlineBadDate);
+        }
     }
 
     private int parseTaskIndex(String input) throws ShinchanException {

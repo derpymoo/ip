@@ -19,6 +19,14 @@ public class Events extends Task {
         this.endTime = endTime;
     }
 
+    String getStartTime() {
+        return startTime;
+    }
+
+    String getEndTime() {
+        return endTime;
+    }
+
     @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + startTime + " to: " + endTime + ")";

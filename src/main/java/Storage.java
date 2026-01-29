@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class Storage {
      * Loads tasks from disk.
      *
      * @return List of tasks loaded from file
-     * @throws ShinchanException If the file cannot be read
+     * @throws ShinchanException If the file cannot be read or data is corrupted
      */
     public List<Task> load() throws ShinchanException {
         List<Task> tasks = new ArrayList<>();
@@ -39,10 +40,8 @@ public class Storage {
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
-
             while ((line = reader.readLine()) != null) {
-                Task task = parseTask(line);
-                tasks.add(task);
+                tasks.add(parseTask(line));
             }
         } catch (IOException e) {
             throw new ShinchanException("Error loading data from file.");
@@ -78,32 +77,32 @@ public class Storage {
     private Task parseTask(String line) throws ShinchanException {
         String[] parts = line.split(" \\| ");
 
+        if (parts.length < 3) {
+            throw new ShinchanException("Corrupted data file.");
+        }
+
+        Task task;
+
         switch (parts[0]) {
         case "T":
-            return buildTodo(parts);
+            task = new Todos(parts[2]);
+            break;
         case "D":
-            return buildDeadline(parts);
+            if (parts.length < 4) {
+                throw new ShinchanException("Corrupted data file.");
+            }
+            task = new Deadlines(parts[2], LocalDate.parse(parts[3]));
+            break;
         case "E":
-            return buildEvent(parts);
+            if (parts.length < 5) {
+                throw new ShinchanException("Corrupted data file.");
+            }
+            task = new Events(parts[2], parts[3], parts[4]);
+            break;
         default:
             throw new ShinchanException("Corrupted data file.");
         }
-    }
 
-    private Task buildTodo(String[] parts) {
-        Task task = new Todos(parts[2]);
-        restoreStatus(task, parts[1]);
-        return task;
-    }
-
-    private Task buildDeadline(String[] parts) {
-        Task task = new Deadlines(parts[2], parts[3]);
-        restoreStatus(task, parts[1]);
-        return task;
-    }
-
-    private Task buildEvent(String[] parts) {
-        Task task = new Events(parts[2], parts[3], parts[4]);
         restoreStatus(task, parts[1]);
         return task;
     }
@@ -114,50 +113,28 @@ public class Storage {
         }
     }
 
-    private String formatTask(Task task) {
+    private String formatTask(Task task) throws ShinchanException {
         if (task instanceof Todos) {
-            return formatTodo(task);
+            return "T | " + getStatus(task) + " | " + task.getDescription();
         }
+
         if (task instanceof Deadlines) {
-            return formatDeadline((Deadlines) task);
+            Deadlines deadlines = (Deadlines) task;
+            return "D | " + getStatus(task) + " | "
+                    + task.getDescription() + " | " + deadlines.getDueDate();
         }
-        return formatEvent((Events) task);
-    }
 
-    private String formatTodo(Task task) {
-        return "T | " + getStatus(task) + " | " + extractDescription(task);
-    }
+        if (task instanceof Events) {
+            Events events = (Events) task;
+            return "E | " + getStatus(task) + " | "
+                    + task.getDescription() + " | "
+                    + events.getStartTime() + " | " + events.getEndTime();
+        }
 
-    private String formatDeadline(Deadlines task) {
-        return "D | " + getStatus(task) + " | "
-                + extractDescription(task) + " | " + extractDeadline(task);
-    }
-
-    private String formatEvent(Events task) {
-        return "E | " + getStatus(task) + " | "
-                + extractDescription(task) + " | "
-                + extractStart(task) + " | " + extractEnd(task);
+        throw new ShinchanException("Unknown task type.");
     }
 
     private String getStatus(Task task) {
-        return task.getStatusIcon().equals("X") ? "1" : "0";
-    }
-
-    private String extractDescription(Task task) {
-        return task.toString()
-                .replaceFirst("^\\[[TDES]\\]\\[[ X]\\] ", "")
-                .replaceAll(" \\(.*\\)$", "");
-    }
-
-    private String extractDeadline(Deadlines task) {
-        return task.toString().replaceAll("^.*by: ", "").replace(")", "");
-    }
-
-    private String extractStart(Events task) {
-        return task.toString().replaceAll("^.*from: ", "").replaceAll(" to:.*", "");
-    }
-
-    private String extractEnd(Events task) {
-        return task.toString().replaceAll("^.*to: ", "").replace(")", "");
+        return task.isDone() ? "1" : "0";
     }
 }
