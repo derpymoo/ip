@@ -31,11 +31,18 @@ application {
     mainClass.set("shinchan.Shinchan")
 }
 
-shadowJar {
-    archiveBaseName = "duke"
-    archiveClassifier = null
+jar {
+    archiveBaseName = 'shinchan'
+    archiveVersion = '0.1'
+
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass
+        )
+    }
 }
 
 run{
     standardInput = System.in
 }
+
