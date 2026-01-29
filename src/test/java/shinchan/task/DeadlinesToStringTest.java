@@ -18,8 +18,8 @@ public class DeadlinesToStringTest {
                 LocalDateTime.of(2026, 1, 15, 18, 0)
         );
 
-        assertTrue(d.toString().contains("Jan"));
-        assertTrue(d.toString().contains("18:00"));
+        String text = d.toString();
+        assertTrue(text.contains("Jan 15 2026"));
+        assertTrue(text.contains("6pm"));
     }
 }
-
