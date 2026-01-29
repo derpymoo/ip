@@ -24,10 +24,11 @@ public class TaskListTest {
     }
 
     @Test
-    public void removeTask_returnsRemovedTaskAndSizeDecreases() {
+    public void removeTask_returnsCorrectTaskAndShrinksList() {
         TaskList list = new TaskList();
         Task task1 = new Todos("a");
         Task task2 = new Todos("b");
+
         list.add(task1);
         list.add(task2);
 
