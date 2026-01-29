@@ -1,18 +1,13 @@
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
 
 /**
  * Runs the Shinchan chatbot that manages a list of tasks.
  */
 public class Shinchan {
 
-    private static final String lineSeparator = "----------------------------------------";
     private static final String dataFilePath = "./data/shinchan.txt";
 
     private static final String messageEmptyInput =
@@ -40,49 +35,51 @@ public class Shinchan {
     private static final String messageNoTasksOnDate =
             "No deadlines/events on that date.";
 
-    private static final int splitLimitTwo = 2;
-    private static final int userIndexOffset = 1;
-
-    private static final DateTimeFormatter dateTimeInputFormatter =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-
-    private final List<Task> tasks;
+    private final TaskList tasks;
     private final Storage storage;
+    private final Ui ui;
 
     /**
      * Creates a Shinchan chatbot instance and loads tasks from disk.
      */
     public Shinchan() {
-        tasks = new ArrayList<>();
         storage = new Storage(dataFilePath);
+        ui = new Ui();
 
+        TaskList loadedTasks;
         try {
-            tasks.addAll(storage.load());
+            loadedTasks = new TaskList(storage.load());
         } catch (ShinchanException e) {
-            printBoxedMessage(e.getMessage());
+            ui.showError(e.getMessage());
+            loadedTasks = new TaskList();
         }
+
+        tasks = loadedTasks;
     }
 
+    /**
+     * Starts the chatbot.
+     *
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         Shinchan shinchan = new Shinchan();
         shinchan.run();
     }
 
     private void run() {
-        printGreeting();
+        ui.showWelcome();
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            while (scanner.hasNextLine()) {
-                String input = scanner.nextLine().trim();
+        while (true) {
+            String input = ui.readCommand().trim();
 
-                try {
-                    boolean shouldExit = handleInput(input);
-                    if (shouldExit) {
-                        return;
-                    }
-                } catch (ShinchanException e) {
-                    printBoxedMessage(e.getMessage());
+            try {
+                boolean shouldExit = handleInput(input);
+                if (shouldExit) {
+                    return;
                 }
+            } catch (ShinchanException e) {
+                ui.showError(e.getMessage());
             }
         }
     }
@@ -92,7 +89,7 @@ public class Shinchan {
             throw new ShinchanException(messageEmptyInput);
         }
 
-        String command = getCommand(input);
+        String command = Parser.getCommandWord(input);
 
         switch (command) {
         case "todo":
@@ -108,7 +105,7 @@ public class Shinchan {
             handleOn(input);
             break;
         case "list":
-            printList();
+            ui.showTaskList(tasks.asUnmodifiableList());
             break;
         case "mark":
             handleMark(input);
@@ -120,7 +117,7 @@ public class Shinchan {
             handleDelete(input);
             break;
         case "bye":
-            printExit();
+            ui.showBye();
             return true;
         default:
             throw new ShinchanException(messageUnknownCommand);
@@ -129,21 +126,16 @@ public class Shinchan {
         return false;
     }
 
-    private String getCommand(String input) {
-        String[] parts = input.split(" ", splitLimitTwo);
-        return parts[0].toLowerCase(Locale.ROOT);
-    }
-
     private void handleTodo(String input) throws ShinchanException {
-        String description = getRemainder(input);
+        String description = Parser.getRemainder(input);
         if (description.isEmpty()) {
             throw new ShinchanException(messageTodoEmpty);
         }
 
         Task task = new Todos(description);
         tasks.add(task);
-        storage.save(tasks);
-        printAdded(task);
+        storage.save(tasks.asMutableList());
+        ui.showTaskAdded(task, tasks.size());
     }
 
     private void handleDeadline(String input) throws ShinchanException {
@@ -151,8 +143,8 @@ public class Shinchan {
             throw new ShinchanException(messageDeadlineMissingBy);
         }
 
-        String remainder = getRemainder(input);
-        String[] parts = remainder.split(" /by ", splitLimitTwo);
+        String remainder = Parser.getRemainder(input);
+        String[] parts = remainder.split(" /by ", 2);
 
         String description = parts[0].trim();
         String by = parts[1].trim();
@@ -161,20 +153,20 @@ public class Shinchan {
             throw new ShinchanException(messageDeadlineEmpty);
         }
 
-        LocalDateTime dueDateTime = parseDateTime(by);
+        LocalDateTime dueDateTime = Parser.parseDateTime(by, messageDateTimeBad);
         Task task = new Deadlines(description, dueDateTime);
         tasks.add(task);
-        storage.save(tasks);
-        printAdded(task);
+        storage.save(tasks.asMutableList());
+        ui.showTaskAdded(task, tasks.size());
     }
 
     private void handleEvent(String input) throws ShinchanException {
-        if (!input.contains("/from") || !input.contains("/to")) {
+        String remainder = Parser.getRemainder(input);
+        if (!remainder.contains("/from") || !remainder.contains("/to")) {
             throw new ShinchanException(messageEventMissingTime);
         }
 
-        String remainder = getRemainder(input);
-        String[] fromParts = remainder.split("/from", splitLimitTwo);
+        String[] fromParts = remainder.split("/from", 2);
 
         String description = fromParts[0].trim();
         if (description.isEmpty()) {
@@ -182,27 +174,27 @@ public class Shinchan {
         }
 
         String timing = fromParts[1].trim();
-        String[] toParts = timing.split("/to", splitLimitTwo);
+        String[] toParts = timing.split("/to", 2);
 
-        LocalDateTime start = parseDateTime(toParts[0].trim());
-        LocalDateTime end = parseDateTime(toParts[1].trim());
+        LocalDateTime start = Parser.parseDateTime(toParts[0].trim(), messageDateTimeBad);
+        LocalDateTime end = Parser.parseDateTime(toParts[1].trim(), messageDateTimeBad);
 
         Task task = new Events(description, start, end);
         tasks.add(task);
-        storage.save(tasks);
-        printAdded(task);
+        storage.save(tasks.asMutableList());
+        ui.showTaskAdded(task, tasks.size());
     }
 
     private void handleOn(String input) throws ShinchanException {
-        String dateText = getRemainder(input);
+        String dateText = Parser.getRemainder(input);
         if (dateText.isEmpty()) {
             throw new ShinchanException(messageOnMissingDate);
         }
 
-        LocalDate date = parseDate(dateText);
+        LocalDate date = Parser.parseDate(dateText, messageOnMissingDate);
 
         List<Task> matching = new ArrayList<>();
-        for (Task task : tasks) {
+        for (Task task : tasks.asUnmodifiableList()) {
             if (task instanceof Deadlines && ((Deadlines) task).getDueDate().equals(date)) {
                 matching.add(task);
             }
@@ -211,133 +203,46 @@ public class Shinchan {
             }
         }
 
-        printLine();
-        if (matching.isEmpty()) {
-            System.out.println(messageNoTasksOnDate);
-        } else {
-            System.out.println("Here are the deadlines/events on " + date + ":");
-            for (int i = 0; i < matching.size(); i++) {
-                System.out.println((i + userIndexOffset) + ". " + matching.get(i));
-            }
-        }
-        printLine();
+        ui.showTasksOnDate(date, matching, messageNoTasksOnDate);
     }
 
     private void handleMark(String input) throws ShinchanException {
-        int index = parseTaskIndex(input);
+        int index = Parser.parseTaskIndex(input, messageInvalidTaskNumber);
         if (!isValidIndex(index)) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
 
         Task task = tasks.get(index);
         task.markAsDone();
-        storage.save(tasks);
-        printBoxedMessage(task.toString());
+        storage.save(tasks.asMutableList());
+        ui.showMessage(task.toString());
     }
 
     private void handleUnmark(String input) throws ShinchanException {
-        int index = parseTaskIndex(input);
+        int index = Parser.parseTaskIndex(input, messageInvalidTaskNumber);
         if (!isValidIndex(index)) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
 
         Task task = tasks.get(index);
         task.markAsUndone();
-        storage.save(tasks);
-        printBoxedMessage(task.toString());
+        storage.save(tasks.asMutableList());
+        ui.showMessage(task.toString());
     }
 
     private void handleDelete(String input) throws ShinchanException {
-        int index = parseTaskIndex(input);
+        int index = Parser.parseTaskIndex(input, messageDeleteInvalid);
         if (!isValidIndex(index)) {
             throw new ShinchanException(messageDeleteInvalid);
         }
 
         Task removed = tasks.remove(index);
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
 
-        printLine();
-        System.out.println("Noted. I've removed this task:");
-        System.out.println(removed);
-        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
-        printLine();
-    }
-
-    private LocalDate parseDate(String text) throws ShinchanException {
-        try {
-            return LocalDate.parse(text.trim());
-        } catch (DateTimeParseException e) {
-            throw new ShinchanException("Date must be in yyyy-MM-dd format.");
-        }
-    }
-
-    private LocalDateTime parseDateTime(String text) throws ShinchanException {
-        try {
-            return LocalDateTime.parse(text.trim(), dateTimeInputFormatter);
-        } catch (DateTimeParseException e) {
-            throw new ShinchanException(messageDateTimeBad);
-        }
-    }
-
-    private int parseTaskIndex(String input) throws ShinchanException {
-        String[] parts = input.split(" ", splitLimitTwo);
-        if (parts.length < splitLimitTwo) {
-            throw new ShinchanException(messageInvalidTaskNumber);
-        }
-
-        try {
-            return Integer.parseInt(parts[1].trim()) - userIndexOffset;
-        } catch (NumberFormatException e) {
-            throw new ShinchanException(messageInvalidTaskNumber);
-        }
+        ui.showTaskDeleted(removed, tasks.size());
     }
 
     private boolean isValidIndex(int index) {
         return index >= 0 && index < tasks.size();
-    }
-
-    private String getRemainder(String input) {
-        String[] parts = input.split(" ", splitLimitTwo);
-        return parts.length < splitLimitTwo ? "" : parts[1].trim();
-    }
-
-    private void printGreeting() {
-        printLine();
-        System.out.println("Hello! I'm Shinchan!");
-        System.out.println("What can I do for you?");
-        printLine();
-    }
-
-    private void printExit() {
-        printLine();
-        System.out.println("Bye. Hope to see you again soon!");
-        printLine();
-    }
-
-    private void printList() {
-        printLine();
-        System.out.println("Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            System.out.println((i + userIndexOffset) + ". " + tasks.get(i));
-        }
-        printLine();
-    }
-
-    private void printAdded(Task task) {
-        printLine();
-        System.out.println("Got it. I've added this task:");
-        System.out.println(task);
-        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
-        printLine();
-    }
-
-    private void printLine() {
-        System.out.println(lineSeparator);
-    }
-
-    private void printBoxedMessage(String message) {
-        printLine();
-        System.out.println(message);
-        printLine();
     }
 }
