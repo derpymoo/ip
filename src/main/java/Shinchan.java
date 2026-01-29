@@ -1,4 +1,6 @@
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,21 +26,29 @@ public class Shinchan {
     private static final String messageDeadlineEmpty =
             "The description of a deadline cannot be empty.";
     private static final String messageDeadlineMissingBy =
-            "The deadline command must include '/by' followed by the due date.";
-    private static final String messageDeadlineBadDate =
-            "Date must be in yyyy-MM-dd format.";
+            "The deadline command must include '/by' followed by the due date/time.";
     private static final String messageEventEmpty =
             "The description of an event cannot be empty.";
     private static final String messageEventMissingTime =
-            "The event command must include '/from' and '/to' followed by the respective times.";
+            "The event command must include '/from' and '/to' followed by the respective date/time.";
+    private static final String messageDateTimeBad =
+            "Date/time must be in yyyy-MM-dd HHmm format.";
     private static final String messageDeleteInvalid =
             "Invalid task number for deletion.";
+    private static final String messageOnMissingDate =
+            "The on command must include a date in yyyy-MM-dd format.";
+    private static final String messageNoTasksOnDate =
+            "No deadlines/events on that date.";
 
     private static final int splitLimitTwo = 2;
     private static final int userIndexOffset = 1;
 
+    private static final DateTimeFormatter dateTimeInputFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+
     private final List<Task> tasks;
     private final Storage storage;
+
     /**
      * Creates a Shinchan chatbot instance and loads tasks from disk.
      */
@@ -94,6 +104,9 @@ public class Shinchan {
         case "event":
             handleEvent(input);
             break;
+        case "on":
+            handleOn(input);
+            break;
         case "list":
             printList();
             break;
@@ -148,8 +161,8 @@ public class Shinchan {
             throw new ShinchanException(messageDeadlineEmpty);
         }
 
-        LocalDate dueDate = parseDate(by);
-        Task task = new Deadlines(description, dueDate);
+        LocalDateTime dueDateTime = parseDateTime(by);
+        Task task = new Deadlines(description, dueDateTime);
         tasks.add(task);
         storage.save(tasks);
         printAdded(task);
@@ -171,10 +184,43 @@ public class Shinchan {
         String timing = fromParts[1].trim();
         String[] toParts = timing.split("/to", splitLimitTwo);
 
-        Task task = new Events(description, toParts[0].trim(), toParts[1].trim());
+        LocalDateTime start = parseDateTime(toParts[0].trim());
+        LocalDateTime end = parseDateTime(toParts[1].trim());
+
+        Task task = new Events(description, start, end);
         tasks.add(task);
         storage.save(tasks);
         printAdded(task);
+    }
+
+    private void handleOn(String input) throws ShinchanException {
+        String dateText = getRemainder(input);
+        if (dateText.isEmpty()) {
+            throw new ShinchanException(messageOnMissingDate);
+        }
+
+        LocalDate date = parseDate(dateText);
+
+        List<Task> matching = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task instanceof Deadlines && ((Deadlines) task).getDueDate().equals(date)) {
+                matching.add(task);
+            }
+            if (task instanceof Events && ((Events) task).occursOn(date)) {
+                matching.add(task);
+            }
+        }
+
+        printLine();
+        if (matching.isEmpty()) {
+            System.out.println(messageNoTasksOnDate);
+        } else {
+            System.out.println("Here are the deadlines/events on " + date + ":");
+            for (int i = 0; i < matching.size(); i++) {
+                System.out.println((i + userIndexOffset) + ". " + matching.get(i));
+            }
+        }
+        printLine();
     }
 
     private void handleMark(String input) throws ShinchanException {
@@ -209,6 +255,7 @@ public class Shinchan {
 
         Task removed = tasks.remove(index);
         storage.save(tasks);
+
         printLine();
         System.out.println("Noted. I've removed this task:");
         System.out.println(removed);
@@ -220,7 +267,15 @@ public class Shinchan {
         try {
             return LocalDate.parse(text.trim());
         } catch (DateTimeParseException e) {
-            throw new ShinchanException(messageDeadlineBadDate);
+            throw new ShinchanException("Date must be in yyyy-MM-dd format.");
+        }
+    }
+
+    private LocalDateTime parseDateTime(String text) throws ShinchanException {
+        try {
+            return LocalDateTime.parse(text.trim(), dateTimeInputFormatter);
+        } catch (DateTimeParseException e) {
+            throw new ShinchanException(messageDateTimeBad);
         }
     }
 

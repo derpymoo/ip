@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,13 +92,13 @@ public class Storage {
             if (parts.length < 4) {
                 throw new ShinchanException("Corrupted data file.");
             }
-            task = new Deadlines(parts[2], LocalDate.parse(parts[3]));
+            task = new Deadlines(parts[2], LocalDateTime.parse(parts[3]));
             break;
         case "E":
             if (parts.length < 5) {
                 throw new ShinchanException("Corrupted data file.");
             }
-            task = new Events(parts[2], parts[3], parts[4]);
+            task = new Events(parts[2], LocalDateTime.parse(parts[3]), LocalDateTime.parse(parts[4]));
             break;
         default:
             throw new ShinchanException("Corrupted data file.");
@@ -121,14 +122,14 @@ public class Storage {
         if (task instanceof Deadlines) {
             Deadlines deadlines = (Deadlines) task;
             return "D | " + getStatus(task) + " | "
-                    + task.getDescription() + " | " + deadlines.getDueDate();
+                    + task.getDescription() + " | " + deadlines.getDueDateTime();
         }
 
         if (task instanceof Events) {
             Events events = (Events) task;
             return "E | " + getStatus(task) + " | "
                     + task.getDescription() + " | "
-                    + events.getStartTime() + " | " + events.getEndTime();
+                    + events.getStartDateTime() + " | " + events.getEndDateTime();
         }
 
         throw new ShinchanException("Unknown task type.");
