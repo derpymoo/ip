@@ -1,8 +1,11 @@
+package shinchan.parser;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
+import shinchan.exception.ShinchanException;
 
 /**
  * Parses user input into command words, arguments, and typed values.

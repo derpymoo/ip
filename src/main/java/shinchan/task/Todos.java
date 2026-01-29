@@ -1,3 +1,5 @@
+package shinchan.task;
+
 /**
  * Represents a todo task without a specific date or time.
  */

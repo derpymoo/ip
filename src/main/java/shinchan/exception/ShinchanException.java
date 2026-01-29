@@ -1,3 +1,5 @@
+package shinchan.exception;
+
 /**
  * Represents an exception specific to the Shinchan application.
  */

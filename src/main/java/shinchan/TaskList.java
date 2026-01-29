@@ -1,6 +1,9 @@
+package shinchan;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import shinchan.task.Task;
 
 /**
  * Encapsulates a list of tasks and provides operations on the list.

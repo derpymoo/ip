@@ -1,6 +1,9 @@
+package shinchan.ui;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
+import shinchan.task.Task;
 
 /**
  * Handles user interaction: reading commands and showing messages.
