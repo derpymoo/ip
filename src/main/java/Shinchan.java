@@ -44,7 +44,7 @@ public class Shinchan {
     private static final DateTimeFormatter dateTimeInputFormatter =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
 
-    private final List<Task> tasks;
+    private final TaskList tasks;
     private final Storage storage;
     private final Ui ui;
 
@@ -52,15 +52,18 @@ public class Shinchan {
      * Creates a Shinchan chatbot instance and loads tasks from disk.
      */
     public Shinchan() {
-        tasks = new ArrayList<>();
         storage = new Storage(dataFilePath);
         ui = new Ui();
 
+        TaskList loadedTasks;
         try {
-            tasks.addAll(storage.load());
+            loadedTasks = new TaskList(storage.load());
         } catch (ShinchanException e) {
             ui.showError(e.getMessage());
+            loadedTasks = new TaskList();
         }
+
+        tasks = loadedTasks;
     }
 
     /**
@@ -111,7 +114,7 @@ public class Shinchan {
             handleOn(input);
             break;
         case "list":
-            ui.showTaskList(tasks);
+            ui.showTaskList(tasks.asUnmodifiableList());
             break;
         case "mark":
             handleMark(input);
@@ -145,7 +148,7 @@ public class Shinchan {
 
         Task task = new Todos(description);
         tasks.add(task);
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
         ui.showTaskAdded(task, tasks.size());
     }
 
@@ -167,7 +170,7 @@ public class Shinchan {
         LocalDateTime dueDateTime = parseDateTime(by);
         Task task = new Deadlines(description, dueDateTime);
         tasks.add(task);
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
         ui.showTaskAdded(task, tasks.size());
     }
 
@@ -192,7 +195,7 @@ public class Shinchan {
 
         Task task = new Events(description, start, end);
         tasks.add(task);
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
         ui.showTaskAdded(task, tasks.size());
     }
 
@@ -205,7 +208,7 @@ public class Shinchan {
         LocalDate date = parseDate(dateText);
 
         List<Task> matching = new ArrayList<>();
-        for (Task task : tasks) {
+        for (Task task : tasks.asUnmodifiableList()) {
             if (task instanceof Deadlines && ((Deadlines) task).getDueDate().equals(date)) {
                 matching.add(task);
             }
@@ -225,7 +228,7 @@ public class Shinchan {
 
         Task task = tasks.get(index);
         task.markAsDone();
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
         ui.showMessage(task.toString());
     }
 
@@ -237,7 +240,7 @@ public class Shinchan {
 
         Task task = tasks.get(index);
         task.markAsUndone();
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
         ui.showMessage(task.toString());
     }
 
@@ -248,7 +251,7 @@ public class Shinchan {
         }
 
         Task removed = tasks.remove(index);
-        storage.save(tasks);
+        storage.save(tasks.asMutableList());
 
         ui.showTaskDeleted(removed, tasks.size());
     }
