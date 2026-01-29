@@ -83,4 +83,23 @@ public class TaskList {
     public List<Task> asMutableList() {
         return tasks;
     }
+
+    /**
+     * Returns tasks whose descriptions contain the given keyword.
+     *
+     * @param keyword Keyword to search for.
+     * @return List of matching tasks.
+     */
+    public List<Task> find(String keyword) {
+        String trimmed = keyword.trim();
+        List<Task> matches = new ArrayList<>();
+
+        String needle = trimmed.toLowerCase();
+        for (Task task : tasks) { // replace `tasks` with your internal list name
+            if (task.getDescription().toLowerCase().contains(needle)) {
+                matches.add(task);
+            }
+        }
+        return matches;
+    }
 }

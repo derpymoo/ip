@@ -30,14 +30,15 @@ public class Parser {
     }
 
     /**
-     * Extracts the remainder (arguments) after the command word.
+     * Returns the part of the input after the first word.
      *
-     * @param input The full user input line.
-     * @return The remainder string, or empty string if none.
+     * @param input Full user input.
+     * @return Remainder after the command word (may be empty).
      */
     public static String getRemainder(String input) {
-        String[] parts = input.split(" ", SPLIT_LIMIT_TWO);
-        return parts.length < 2 ? "" : parts[1].trim();
+        String trimmed = input.trim();
+        int firstSpace = trimmed.indexOf(' ');
+        return firstSpace == -1 ? "" : trimmed.substring(firstSpace + 1).trim();
     }
 
     /**

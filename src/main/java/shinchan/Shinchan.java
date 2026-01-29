@@ -123,6 +123,9 @@ public class Shinchan {
         case "event":
             handleEvent(input);
             break;
+        case "find":
+            handleFind(input);
+            break;
         case "on":
             handleOn(input);
             break;
@@ -314,5 +317,20 @@ public class Shinchan {
      */
     private boolean isValidIndex(int index) {
         return index >= 0 && index < tasks.size();
+    }
+
+    /**
+     * Finds and displays tasks that match the keyword.
+     *
+     * @param input User input.
+     * @throws ShinchanException If the keyword is missing.
+     */
+    private void handleFind(String input) throws ShinchanException {
+        String keyword = Parser.getRemainder(input); // or your method to get the rest of the line
+        if (keyword.trim().isEmpty()) {
+            throw new ShinchanException("The find command must include a keyword.");
+        }
+
+        ui.showFindResults(tasks.find(keyword));
     }
 }
