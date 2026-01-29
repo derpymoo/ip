@@ -9,6 +9,7 @@ import java.util.Scanner;
 public class Shinchan {
 
     private static final String lineSeparator = "----------------------------------------";
+    private static final String dataFilePath = "./data/shinchan.txt";
 
     private static final String messageEmptyInput =
             "Input cannot be empty. Please enter a valid command.";
@@ -32,7 +33,19 @@ public class Shinchan {
     private static final int splitLimitTwo = 2;
     private static final int userIndexOffset = 1;
 
-    private final List<Task> tasks = new ArrayList<>();
+    private final List<Task> tasks;
+    private final Storage storage;
+
+    public Shinchan() {
+        tasks = new ArrayList<>();
+        storage = new Storage(dataFilePath);
+
+        try {
+            tasks.addAll(storage.load());
+        } catch (ShinchanException e) {
+            printBoxedMessage(e.getMessage());
+        }
+    }
 
     public static void main(String[] args) {
         Shinchan shinchan = new Shinchan();
@@ -108,8 +121,9 @@ public class Shinchan {
             throw new ShinchanException(messageTodoEmpty);
         }
 
-        Task task = new ToDos(description);
+        Task task = new Todos(description);
         tasks.add(task);
+        storage.save(tasks); // SAVE
         printAdded(task);
     }
 
@@ -130,6 +144,7 @@ public class Shinchan {
 
         Task task = new Deadlines(description, by);
         tasks.add(task);
+        storage.save(tasks); // SAVE
         printAdded(task);
     }
 
@@ -149,43 +164,44 @@ public class Shinchan {
         String timing = fromParts[1].trim();
         String[] toParts = timing.split("/to", splitLimitTwo);
 
-        String from = toParts[0].trim();
-        String to = toParts[1].trim();
-
-        Task task = new Events(description, from, to);
+        Task task = new Events(description, toParts[0].trim(), toParts[1].trim());
         tasks.add(task);
+        storage.save(tasks); // SAVE
         printAdded(task);
     }
 
     private void handleMark(String input) throws ShinchanException {
-        int taskIndex = parseTaskIndex(input);
-        if (!isValidIndex(taskIndex)) {
+        int index = parseTaskIndex(input);
+        if (!isValidIndex(index)) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
 
-        Task task = tasks.get(taskIndex);
+        Task task = tasks.get(index);
         task.markAsDone();
+        storage.save(tasks); // SAVE
         printBoxedMessage(task.toString());
     }
 
     private void handleUnmark(String input) throws ShinchanException {
-        int taskIndex = parseTaskIndex(input);
-        if (!isValidIndex(taskIndex)) {
+        int index = parseTaskIndex(input);
+        if (!isValidIndex(index)) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
 
-        Task task = tasks.get(taskIndex);
+        Task task = tasks.get(index);
         task.markAsUndone();
+        storage.save(tasks); // SAVE
         printBoxedMessage(task.toString());
     }
 
     private void handleDelete(String input) throws ShinchanException {
-        int taskIndex = parseTaskIndex(input);
-        if (!isValidIndex(taskIndex)) {
+        int index = parseTaskIndex(input);
+        if (!isValidIndex(index)) {
             throw new ShinchanException(messageDeleteInvalid);
         }
 
-        Task removed = tasks.remove(taskIndex);
+        Task removed = tasks.remove(index);
+        storage.save(tasks); // SAVE
         printLine();
         System.out.println("Noted. I've removed this task:");
         System.out.println(removed);
@@ -200,8 +216,7 @@ public class Shinchan {
         }
 
         try {
-            int userNumber = Integer.parseInt(parts[1].trim());
-            return userNumber - userIndexOffset;
+            return Integer.parseInt(parts[1].trim()) - userIndexOffset;
         } catch (NumberFormatException e) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
@@ -213,10 +228,7 @@ public class Shinchan {
 
     private String getRemainder(String input) {
         String[] parts = input.split(" ", splitLimitTwo);
-        if (parts.length < splitLimitTwo) {
-            return "";
-        }
-        return parts[1].trim();
+        return parts.length < splitLimitTwo ? "" : parts[1].trim();
     }
 
     private void printGreeting() {
@@ -236,8 +248,7 @@ public class Shinchan {
         printLine();
         System.out.println("Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
-            int displayIndex = i + userIndexOffset;
-            System.out.println(displayIndex + ". " + tasks.get(i));
+            System.out.println((i + userIndexOffset) + ". " + tasks.get(i));
         }
         printLine();
     }
