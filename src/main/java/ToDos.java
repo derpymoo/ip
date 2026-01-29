@@ -1,5 +1,14 @@
-public class ToDos extends Task {
-    public ToDos(String description) {
+/**
+ * Represents a todo task without a specific date or time.
+ */
+public class Todos extends Task {
+
+    /**
+     * Creates a todo task with the given description.
+     *
+     * @param description Description of the task
+     */
+    public Todos(String description) {
         super(description);
     }
 
