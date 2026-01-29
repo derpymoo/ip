@@ -15,24 +15,39 @@ public class Deadlines extends Task {
     private final LocalDateTime dueDateTime;
 
     /**
-     * Creates a deadline task with the given description and due date/time.
+     * Creates a deadline task with the given description and due date-time.
      *
-     * @param description Description of the task
-     * @param dueDateTime Due date and time of the task
+     * @param description Description of the task.
+     * @param dueDateTime Due date and time of the task.
      */
     public Deadlines(String description, LocalDateTime dueDateTime) {
         super(description);
         this.dueDateTime = dueDateTime;
     }
 
+    /**
+     * Returns the due date and time of this deadline task.
+     *
+     * @return Due date and time.
+     */
     public LocalDateTime getDueDateTime() {
         return dueDateTime;
     }
 
+    /**
+     * Returns the due date of this deadline task.
+     *
+     * @return Due date.
+     */
     public LocalDate getDueDate() {
         return dueDateTime.toLocalDate();
     }
 
+    /**
+     * Returns the string representation of a deadline task.
+     *
+     * @return Formatted deadline string.
+     */
     @Override
     public String toString() {
         return "[D]" + super.toString() + " (by: "

@@ -14,6 +14,11 @@ public class Todos extends Task {
         super(description);
     }
 
+    /**
+     * Returns the string representation of the todo.
+     *
+     * @return Formatted todo string.
+     */
     @Override
     public String toString() {
         return "[T]" + super.toString();
