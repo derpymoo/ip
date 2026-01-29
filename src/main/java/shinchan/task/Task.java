@@ -41,14 +41,29 @@ public class Task {
         isDone = false;
     }
 
+    /**
+     * Returns the description of the task.
+     *
+     * @return Task description.
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Returns whether the task is marked as done.
+     *
+     * @return {@code true} if done, otherwise {@code false}.
+     */
     public boolean isDone() {
         return isDone;
     }
 
+    /**
+     * Returns the string representation of the task.
+     *
+     * @return Formatted task string.
+     */
     @Override
     public String toString() {
         return "[" + getStatusIcon() + "] " + description;

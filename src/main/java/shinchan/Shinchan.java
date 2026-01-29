@@ -16,6 +16,7 @@ import shinchan.ui.Ui;
 
 /**
  * Runs the Shinchan chatbot that manages a list of tasks.
+ * Handles user input, command execution, and task persistence.
  */
 public class Shinchan {
 
@@ -69,15 +70,18 @@ public class Shinchan {
     }
 
     /**
-     * Starts the chatbot.
+     * Starts the chatbot application.
      *
-     * @param args Command line arguments.
+     * @param args Command-line arguments (not used).
      */
     public static void main(String[] args) {
         Shinchan shinchan = new Shinchan();
         shinchan.run();
     }
 
+    /**
+     * Runs the main input-processing loop of the chatbot.
+     */
     private void run() {
         ui.showWelcome();
 
@@ -95,6 +99,13 @@ public class Shinchan {
         }
     }
 
+    /**
+     * Processes a single user input command.
+     *
+     * @param input Raw user input
+     * @return {@code true} if the chatbot should terminate
+     * @throws ShinchanException If the command is invalid
+     */
     private boolean handleInput(String input) throws ShinchanException {
         if (input.isEmpty()) {
             throw new ShinchanException(messageEmptyInput);
@@ -137,6 +148,12 @@ public class Shinchan {
         return false;
     }
 
+    /**
+     * Handles the creation of a todo task.
+     *
+     * @param input User input
+     * @throws ShinchanException If the description is missing
+     */
     private void handleTodo(String input) throws ShinchanException {
         String description = Parser.getRemainder(input);
         if (description.isEmpty()) {
@@ -149,6 +166,12 @@ public class Shinchan {
         ui.showTaskAdded(task, tasks.size());
     }
 
+    /**
+     * Handles the creation of a deadline task.
+     *
+     * @param input User input
+     * @throws ShinchanException If required fields are missing or invalid
+     */
     private void handleDeadline(String input) throws ShinchanException {
         if (!input.contains(" /by ")) {
             throw new ShinchanException(messageDeadlineMissingBy);
@@ -171,6 +194,12 @@ public class Shinchan {
         ui.showTaskAdded(task, tasks.size());
     }
 
+    /**
+     * Handles the creation of an event task.
+     *
+     * @param input User input
+     * @throws ShinchanException If required fields are missing or invalid
+     */
     private void handleEvent(String input) throws ShinchanException {
         String remainder = Parser.getRemainder(input);
         if (!remainder.contains("/from") || !remainder.contains("/to")) {
@@ -196,6 +225,12 @@ public class Shinchan {
         ui.showTaskAdded(task, tasks.size());
     }
 
+    /**
+     * Displays deadlines and events occurring on a specific date.
+     *
+     * @param input User input
+     * @throws ShinchanException If the date is missing or invalid
+     */
     private void handleOn(String input) throws ShinchanException {
         String dateText = Parser.getRemainder(input);
         if (dateText.isEmpty()) {
@@ -217,6 +252,12 @@ public class Shinchan {
         ui.showTasksOnDate(date, matching, messageNoTasksOnDate);
     }
 
+    /**
+     * Marks a task as completed.
+     *
+     * @param input User input
+     * @throws ShinchanException If the task index is invalid
+     */
     private void handleMark(String input) throws ShinchanException {
         int index = Parser.parseTaskIndex(input, messageInvalidTaskNumber);
         if (!isValidIndex(index)) {
@@ -229,6 +270,12 @@ public class Shinchan {
         ui.showMessage(task.toString());
     }
 
+    /**
+     * Marks a task as not completed.
+     *
+     * @param input User input
+     * @throws ShinchanException If the task index is invalid
+     */
     private void handleUnmark(String input) throws ShinchanException {
         int index = Parser.parseTaskIndex(input, messageInvalidTaskNumber);
         if (!isValidIndex(index)) {
@@ -241,6 +288,12 @@ public class Shinchan {
         ui.showMessage(task.toString());
     }
 
+    /**
+     * Deletes a task from the task list.
+     *
+     * @param input User input
+     * @throws ShinchanException If the task index is invalid
+     */
     private void handleDelete(String input) throws ShinchanException {
         int index = Parser.parseTaskIndex(input, messageDeleteInvalid);
         if (!isValidIndex(index)) {
@@ -253,6 +306,12 @@ public class Shinchan {
         ui.showTaskDeleted(removed, tasks.size());
     }
 
+    /**
+     * Checks whether an index is within the valid task list range.
+     *
+     * @param index Task index
+     * @return {@code true} if the index is valid
+     */
     private boolean isValidIndex(int index) {
         return index >= 0 && index < tasks.size();
     }
