@@ -1,10 +1,7 @@
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Runs the Shinchan chatbot that manages a list of tasks.
@@ -37,12 +34,6 @@ public class Shinchan {
             "The on command must include a date in yyyy-MM-dd format.";
     private static final String messageNoTasksOnDate =
             "No deadlines/events on that date.";
-
-    private static final int splitLimitTwo = 2;
-    private static final int userIndexOffset = 1;
-
-    private static final DateTimeFormatter dateTimeInputFormatter =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
 
     private final TaskList tasks;
     private final Storage storage;
@@ -98,7 +89,7 @@ public class Shinchan {
             throw new ShinchanException(messageEmptyInput);
         }
 
-        String command = getCommand(input);
+        String command = Parser.getCommandWord(input);
 
         switch (command) {
         case "todo":
@@ -135,13 +126,8 @@ public class Shinchan {
         return false;
     }
 
-    private String getCommand(String input) {
-        String[] parts = input.split(" ", splitLimitTwo);
-        return parts[0].toLowerCase(Locale.ROOT);
-    }
-
     private void handleTodo(String input) throws ShinchanException {
-        String description = getRemainder(input);
+        String description = Parser.getRemainder(input);
         if (description.isEmpty()) {
             throw new ShinchanException(messageTodoEmpty);
         }
@@ -157,8 +143,8 @@ public class Shinchan {
             throw new ShinchanException(messageDeadlineMissingBy);
         }
 
-        String remainder = getRemainder(input);
-        String[] parts = remainder.split(" /by ", splitLimitTwo);
+        String remainder = Parser.getRemainder(input);
+        String[] parts = remainder.split(" /by ", 2);
 
         String description = parts[0].trim();
         String by = parts[1].trim();
@@ -167,7 +153,7 @@ public class Shinchan {
             throw new ShinchanException(messageDeadlineEmpty);
         }
 
-        LocalDateTime dueDateTime = parseDateTime(by);
+        LocalDateTime dueDateTime = Parser.parseDateTime(by, messageDateTimeBad);
         Task task = new Deadlines(description, dueDateTime);
         tasks.add(task);
         storage.save(tasks.asMutableList());
@@ -175,12 +161,12 @@ public class Shinchan {
     }
 
     private void handleEvent(String input) throws ShinchanException {
-        if (!input.contains("/from") || !input.contains("/to")) {
+        String remainder = Parser.getRemainder(input);
+        if (!remainder.contains("/from") || !remainder.contains("/to")) {
             throw new ShinchanException(messageEventMissingTime);
         }
 
-        String remainder = getRemainder(input);
-        String[] fromParts = remainder.split("/from", splitLimitTwo);
+        String[] fromParts = remainder.split("/from", 2);
 
         String description = fromParts[0].trim();
         if (description.isEmpty()) {
@@ -188,10 +174,10 @@ public class Shinchan {
         }
 
         String timing = fromParts[1].trim();
-        String[] toParts = timing.split("/to", splitLimitTwo);
+        String[] toParts = timing.split("/to", 2);
 
-        LocalDateTime start = parseDateTime(toParts[0].trim());
-        LocalDateTime end = parseDateTime(toParts[1].trim());
+        LocalDateTime start = Parser.parseDateTime(toParts[0].trim(), messageDateTimeBad);
+        LocalDateTime end = Parser.parseDateTime(toParts[1].trim(), messageDateTimeBad);
 
         Task task = new Events(description, start, end);
         tasks.add(task);
@@ -200,12 +186,12 @@ public class Shinchan {
     }
 
     private void handleOn(String input) throws ShinchanException {
-        String dateText = getRemainder(input);
+        String dateText = Parser.getRemainder(input);
         if (dateText.isEmpty()) {
             throw new ShinchanException(messageOnMissingDate);
         }
 
-        LocalDate date = parseDate(dateText);
+        LocalDate date = Parser.parseDate(dateText, messageOnMissingDate);
 
         List<Task> matching = new ArrayList<>();
         for (Task task : tasks.asUnmodifiableList()) {
@@ -221,7 +207,7 @@ public class Shinchan {
     }
 
     private void handleMark(String input) throws ShinchanException {
-        int index = parseTaskIndex(input);
+        int index = Parser.parseTaskIndex(input, messageInvalidTaskNumber);
         if (!isValidIndex(index)) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
@@ -233,7 +219,7 @@ public class Shinchan {
     }
 
     private void handleUnmark(String input) throws ShinchanException {
-        int index = parseTaskIndex(input);
+        int index = Parser.parseTaskIndex(input, messageInvalidTaskNumber);
         if (!isValidIndex(index)) {
             throw new ShinchanException(messageInvalidTaskNumber);
         }
@@ -245,7 +231,7 @@ public class Shinchan {
     }
 
     private void handleDelete(String input) throws ShinchanException {
-        int index = parseTaskIndex(input);
+        int index = Parser.parseTaskIndex(input, messageDeleteInvalid);
         if (!isValidIndex(index)) {
             throw new ShinchanException(messageDeleteInvalid);
         }
@@ -256,41 +242,7 @@ public class Shinchan {
         ui.showTaskDeleted(removed, tasks.size());
     }
 
-    private LocalDate parseDate(String text) throws ShinchanException {
-        try {
-            return LocalDate.parse(text.trim());
-        } catch (DateTimeParseException e) {
-            throw new ShinchanException("Date must be in yyyy-MM-dd format.");
-        }
-    }
-
-    private LocalDateTime parseDateTime(String text) throws ShinchanException {
-        try {
-            return LocalDateTime.parse(text.trim(), dateTimeInputFormatter);
-        } catch (DateTimeParseException e) {
-            throw new ShinchanException(messageDateTimeBad);
-        }
-    }
-
-    private int parseTaskIndex(String input) throws ShinchanException {
-        String[] parts = input.split(" ", splitLimitTwo);
-        if (parts.length < splitLimitTwo) {
-            throw new ShinchanException(messageInvalidTaskNumber);
-        }
-
-        try {
-            return Integer.parseInt(parts[1].trim()) - userIndexOffset;
-        } catch (NumberFormatException e) {
-            throw new ShinchanException(messageInvalidTaskNumber);
-        }
-    }
-
     private boolean isValidIndex(int index) {
         return index >= 0 && index < tasks.size();
-    }
-
-    private String getRemainder(String input) {
-        String[] parts = input.split(" ", splitLimitTwo);
-        return parts.length < splitLimitTwo ? "" : parts[1].trim();
     }
 }
