@@ -14,30 +14,24 @@ import org.junit.jupiter.api.Test;
 public class EventsTest {
 
     @Test
-    public void occursOn_dateWithinRange_returnsTrue() {
-        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 9, 0);
-        LocalDateTime end = LocalDateTime.of(2026, 1, 12, 18, 0);
-        Events event = new Events("camp", start, end);
+    public void occursOn_insideRange_returnsTrue() {
+        Events e = new Events(
+                "camp",
+                LocalDateTime.of(2026, 1, 10, 9, 0),
+                LocalDateTime.of(2026, 1, 12, 18, 0)
+        );
 
-        assertTrue(event.occursOn(LocalDate.of(2026, 1, 11)));
+        assertTrue(e.occursOn(LocalDate.of(2026, 1, 11)));
     }
 
     @Test
-    public void occursOn_dateOutsideRange_returnsFalse() {
-        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 9, 0);
-        LocalDateTime end = LocalDateTime.of(2026, 1, 12, 18, 0);
-        Events event = new Events("camp", start, end);
+    public void occursOn_outsideRange_returnsFalse() {
+        Events e = new Events(
+                "camp",
+                LocalDateTime.of(2026, 1, 10, 9, 0),
+                LocalDateTime.of(2026, 1, 12, 18, 0)
+        );
 
-        assertFalse(event.occursOn(LocalDate.of(2026, 1, 13)));
-    }
-
-    @Test
-    public void occursOn_onBoundaryDates_returnsTrue() {
-        LocalDateTime start = LocalDateTime.of(2026, 1, 10, 9, 0);
-        LocalDateTime end = LocalDateTime.of(2026, 1, 12, 18, 0);
-        Events event = new Events("camp", start, end);
-
-        assertTrue(event.occursOn(LocalDate.of(2026, 1, 10)));
-        assertTrue(event.occursOn(LocalDate.of(2026, 1, 12)));
+        assertFalse(e.occursOn(LocalDate.of(2026, 1, 13)));
     }
 }
