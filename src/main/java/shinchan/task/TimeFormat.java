@@ -31,9 +31,9 @@ public class TimeFormat {
     static String formatAmPm(LocalDateTime dateTime) {
         String formatted;
         if (dateTime.getMinute() == 0) {
-            formatted = dateTime.format(hourAmPm);     // e.g. 8PM
+            formatted = dateTime.format(hourAmPm);
         } else {
-            formatted = dateTime.format(hourMinuteAmPm); // e.g. 8:30PM
+            formatted = dateTime.format(hourMinuteAmPm);
         }
         return formatted.toLowerCase(); // 8pm / 8:30pm
     }
