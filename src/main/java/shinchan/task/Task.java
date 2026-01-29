@@ -1,3 +1,5 @@
+package shinchan.task;
+
 /**
  * Represents a task with a description and completion status.
  */
@@ -39,11 +41,11 @@ public class Task {
         isDone = false;
     }
 
-    String getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    boolean isDone() {
+    public boolean isDone() {
         return isDone;
     }
 

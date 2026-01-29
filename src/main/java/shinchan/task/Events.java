@@ -1,3 +1,5 @@
+package shinchan.task;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,15 +28,24 @@ public class Events extends Task {
         this.endDateTime = endDateTime;
     }
 
-    LocalDateTime getStartDateTime() {
+    public LocalDateTime getStartDateTime() {
         return startDateTime;
     }
 
-    LocalDateTime getEndDateTime() {
+    public LocalDateTime getEndDateTime() {
         return endDateTime;
     }
 
-    boolean occursOn(LocalDate date) {
+    /**
+     * Checks whether this event occurs on the specified date.
+     *
+     * <p>An event is considered to occur on a date if the date is
+     * on or after the event start date and on or before the event end date.</p>
+     *
+     * @param date The date to check.
+     * @return {@code true} if the event occurs on the given date; {@code false} otherwise.
+     */
+    public boolean occursOn(LocalDate date) {
         LocalDate startDate = startDateTime.toLocalDate();
         LocalDate endDate = endDateTime.toLocalDate();
         return (!date.isBefore(startDate)) && (!date.isAfter(endDate));

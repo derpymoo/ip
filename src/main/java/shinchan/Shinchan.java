@@ -1,7 +1,18 @@
+package shinchan;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import shinchan.exception.ShinchanException;
+import shinchan.parser.Parser;
+import shinchan.storage.Storage;
+import shinchan.task.Deadlines;
+import shinchan.task.Events;
+import shinchan.task.Task;
+import shinchan.task.Todos;
+import shinchan.ui.Ui;
 
 /**
  * Runs the Shinchan chatbot that manages a list of tasks.

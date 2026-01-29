@@ -1,3 +1,5 @@
+package shinchan.task;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,11 +25,11 @@ public class Deadlines extends Task {
         this.dueDateTime = dueDateTime;
     }
 
-    LocalDateTime getDueDateTime() {
+    public LocalDateTime getDueDateTime() {
         return dueDateTime;
     }
 
-    LocalDate getDueDate() {
+    public LocalDate getDueDate() {
         return dueDateTime.toLocalDate();
     }
 
