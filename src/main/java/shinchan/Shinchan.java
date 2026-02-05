@@ -20,6 +20,8 @@ import shinchan.ui.Ui;
  */
 public class Shinchan {
 
+    private boolean isExit = false;
+
     private static final String dataFilePath = "./data/shinchan.txt";
 
     private static final String messageEmptyInput =
@@ -77,6 +79,44 @@ public class Shinchan {
     public static void main(String[] args) {
         Shinchan shinchan = new Shinchan();
         shinchan.run();
+    }
+
+    public String getWelcomeMessage() {
+        // reuse existing Ui output format by capturing it
+        return capturePrintedOutput(() -> ui.showWelcome());
+    }
+
+    public String getResponse(String input) {
+        if (input == null) {
+            input = "";
+        }
+        String trimmed = input.trim();
+
+        return capturePrintedOutput(() -> {
+            try {
+                boolean shouldExit = handleInput(trimmed);
+                isExit = shouldExit;
+            } catch (ShinchanException e) {
+                ui.showError(e.getMessage());
+            }
+        });
+    }
+
+    public boolean isExit() {
+        return isExit;
+    }
+
+    private String capturePrintedOutput(Runnable action) {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        java.io.PrintStream oldOut = System.out;
+        try {
+            System.setOut(new java.io.PrintStream(baos));
+            action.run();
+        } finally {
+            System.out.flush();
+            System.setOut(oldOut);
+        }
+        return baos.toString().trim();
     }
 
     /**

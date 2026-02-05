@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="shinchan.MainWindow">
+
+    <children>
+        <ScrollPane fx:id="scrollPane" prefHeight="560.0" prefWidth="400.0" fitToWidth="true">
+            <content>
+                <VBox fx:id="dialogContainer" spacing="10.0" prefWidth="380.0"/>
+            </content>
+        </ScrollPane>
+
+        <TextField fx:id="userInput" layoutY="565.0" prefWidth="320.0" promptText="Type a command..."/>
+        <Button text="Send" layoutX="325.0" layoutY="565.0" prefWidth="75.0" onAction="#handleUserInput"/>
+    </children>
+</AnchorPane>
