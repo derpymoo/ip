@@ -32,6 +32,7 @@ public class Task {
      * Marks the task as done.
      */
     public void markAsDone() {
+        assert !isDone : "Task should not already be marked done";
         isDone = true;
     }
 
@@ -39,6 +40,7 @@ public class Task {
      * Marks the task as not done.
      */
     public void markAsUndone() {
+        assert isDone : "Task should be done before marking undone";
         isDone = false;
     }
 

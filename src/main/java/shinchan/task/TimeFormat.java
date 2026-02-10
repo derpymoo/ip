@@ -2,17 +2,17 @@ package shinchan.task;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 /**
  * Formats times in 12-hour lowercase am/pm format such as 8pm or 8:30pm.
  */
-public final class TimeFormat {
+public class TimeFormat {
 
-    private static final DateTimeFormatter HOUR_AM_PM =
-            DateTimeFormatter.ofPattern("ha");
-    private static final DateTimeFormatter HOUR_MINUTE_AM_PM =
+    private static final DateTimeFormatter hourMinuteAmPm =
             DateTimeFormatter.ofPattern("h:mma");
+
+    private static final DateTimeFormatter hourAmPm =
+            DateTimeFormatter.ofPattern("ha");
 
     /**
      * Prevents instantiation of this utility class.
@@ -28,12 +28,13 @@ public final class TimeFormat {
      * @param dateTime Date-time to format.
      * @return Formatted time string.
      */
-    public static String formatAmPm(LocalDateTime dateTime) {
-        assert dateTime != null : "Date-time to format should not be null";
-
-        DateTimeFormatter formatter =
-                dateTime.getMinute() == 0 ? HOUR_AM_PM : HOUR_MINUTE_AM_PM;
-
-        return dateTime.format(formatter).toLowerCase(Locale.ROOT);
+    static String formatAmPm(LocalDateTime dateTime) {
+        String formatted;
+        if (dateTime.getMinute() == 0) {
+            formatted = dateTime.format(hourAmPm);
+        } else {
+            formatted = dateTime.format(hourMinuteAmPm);
+        }
+        return formatted.toLowerCase(); // 8pm / 8:30pm
     }
 }
