@@ -29,6 +29,7 @@ public class TimeFormat {
      * @return Formatted time string.
      */
     static String formatAmPm(LocalDateTime dateTime) {
+        assert dateTime != null : "Date-time to format should not be null";
         String formatted;
         if (dateTime.getMinute() == 0) {
             formatted = dateTime.format(hourAmPm);

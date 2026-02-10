@@ -14,6 +14,7 @@ public class Task {
      * @param description Description of the task
      */
     public Task(String description) {
+        assert description != null : "Task description should not be null";
         this.description = description;
         this.isDone = false;
     }
@@ -31,6 +32,7 @@ public class Task {
      * Marks the task as done.
      */
     public void markAsDone() {
+        assert !isDone : "Task should not already be marked done";
         isDone = true;
     }
 
@@ -38,6 +40,7 @@ public class Task {
      * Marks the task as not done.
      */
     public void markAsUndone() {
+        assert isDone : "Task should be done before marking undone";
         isDone = false;
     }
 
