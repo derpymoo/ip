@@ -9,9 +9,13 @@ import java.time.format.DateTimeFormatter;
  */
 public class Events extends Task {
 
-    private static final DateTimeFormatter dateFormatter =
+    private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("MMM dd yyyy");
 
+    private static final String PREFIX = "[E]";
+    private static final String FROM_OPEN = " (from: ";
+    private static final String TO_MIDDLE = " to: ";
+    private static final String CLOSE = ")";
     private final LocalDateTime startDateTime;
     private final LocalDateTime endDateTime;
 
@@ -71,8 +75,14 @@ public class Events extends Task {
      */
     @Override
     public String toString() {
-        return "[E]" + super.toString()
-                + " (from: " + startDateTime.format(dateFormatter) + " " + TimeFormat.formatAmPm(startDateTime)
-                + " to: " + endDateTime.format(dateFormatter) + " " + TimeFormat.formatAmPm(endDateTime) + ")";
+        String startDate = startDateTime.format(DATE_FORMATTER);
+        String startTime = TimeFormat.formatAmPm(startDateTime);
+        String endDate = endDateTime.format(DATE_FORMATTER);
+        String endTime = TimeFormat.formatAmPm(endDateTime);
+
+        return PREFIX + super.toString()
+                + FROM_OPEN + startDate + " " + startTime
+                + TO_MIDDLE + endDate + " " + endTime
+                + CLOSE;
     }
 }
