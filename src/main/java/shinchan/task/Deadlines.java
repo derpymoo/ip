@@ -9,9 +9,12 @@ import java.time.format.DateTimeFormatter;
  */
 public class Deadlines extends Task {
 
-    private static final DateTimeFormatter dateFormatter =
+    private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("MMM dd yyyy");
 
+    private static final String PREFIX = "[D]";
+    private static final String BY_OPEN = " (by: ";
+    private static final String CLOSE = ")";
     private final LocalDateTime dueDateTime;
 
     /**
@@ -50,7 +53,10 @@ public class Deadlines extends Task {
      */
     @Override
     public String toString() {
-        return "[D]" + super.toString() + " (by: "
-                + dueDateTime.format(dateFormatter) + " " + TimeFormat.formatAmPm(dueDateTime) + ")";
+        String date = dueDateTime.format(DATE_FORMATTER);
+        String time = TimeFormat.formatAmPm(dueDateTime);
+
+        return PREFIX + super.toString()
+                + BY_OPEN + date + " " + time + CLOSE;
     }
 }

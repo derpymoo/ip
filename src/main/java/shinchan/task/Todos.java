@@ -5,6 +5,7 @@ package shinchan.task;
  */
 public class Todos extends Task {
 
+    private static final String PREFIX = "[T]";
     /**
      * Creates a todo task with the given description.
      *
@@ -21,6 +22,6 @@ public class Todos extends Task {
      */
     @Override
     public String toString() {
-        return "[T]" + super.toString();
+        return PREFIX + super.toString();
     }
 }
