@@ -60,4 +60,8 @@ public class Deadlines extends Task {
         return PREFIX + super.toString()
                 + BY_OPEN + date + " " + time + CLOSE;
     }
+
+    public LocalDateTime getBy() {
+        return this.dueDateTime;
+    }
 }

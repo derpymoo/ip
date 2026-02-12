@@ -1,9 +1,11 @@
 package shinchan;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import shinchan.task.Deadlines;
 import shinchan.task.Task;
 
 /**
@@ -91,15 +93,41 @@ public class TaskList {
      * @return List of matching tasks.
      */
     public List<Task> find(String keyword) {
-        String trimmed = keyword.trim();
+        String needle = keyword.trim().toLowerCase();
         List<Task> matches = new ArrayList<>();
 
-        String needle = trimmed.toLowerCase();
-        for (Task task : tasks) { // replace `tasks` with your internal list name
+        for (Task task : tasks) {
             if (task.getDescription().toLowerCase().contains(needle)) {
                 matches.add(task);
             }
         }
+
         return matches;
+    }
+
+    /**
+     * Returns deadline tasks due within the next given number of days (inclusive).
+     *
+     * @param days Number of days from now to look ahead.
+     * @return List of upcoming deadline tasks.
+     */
+    public List<Task> getUpcomingDeadlines(int days) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime future = now.plusDays(days);
+
+        List<Task> upcoming = new ArrayList<>();
+
+        for (Task task : tasks) {
+            if (task instanceof Deadlines) {
+                Deadlines deadlineTask = (Deadlines) task;
+                LocalDateTime deadline = deadlineTask.getBy();
+
+                if (!deadline.isBefore(now) && !deadline.isAfter(future)) {
+                    upcoming.add(task);
+                }
+            }
+        }
+
+        return upcoming;
     }
 }
