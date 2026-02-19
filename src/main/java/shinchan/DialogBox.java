@@ -8,15 +8,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.shape.Circle;
 
 /**
  * Represents a dialog box consisting of an ImageView to represent the speaker's face
  * and a label containing text from the speaker.
  */
-public class DialogBox extends javafx.scene.layout.HBox {
+public class DialogBox extends HBox {
     @FXML
     private Label dialog;
     @FXML
@@ -33,7 +36,16 @@ public class DialogBox extends javafx.scene.layout.HBox {
         }
 
         dialog.setText(text);
+
+        // ✅ Key fixes for "..." truncation
         dialog.setWrapText(true);
+        dialog.setTextOverrun(OverrunStyle.CLIP); // avoid ellipsis when constrained
+        dialog.setMinWidth(0); // allow the label to shrink within HBox
+        HBox.setHgrow(dialog, Priority.ALWAYS); // let label take remaining width
+
+        // Constrain bubble width so text wraps (tweak 0.70 as you like)
+        dialog.maxWidthProperty().bind(widthProperty().multiply(0.70));
+        dialog.prefWidthProperty().bind(widthProperty().multiply(0.70));
 
         displayPicture.setImage(img);
         displayPicture.setPreserveRatio(true);
@@ -80,39 +92,18 @@ public class DialogBox extends javafx.scene.layout.HBox {
         dialog.getStyleClass().addAll("bubble", "bubble-error");
     }
 
-    /**
-     * Creates a user dialog box (right-aligned).
-     *
-     * @param text The text to display.
-     * @param img  The user's avatar image.
-     * @return A DialogBox representing the user message.
-     */
     public static DialogBox getUserDialog(String text, Image img) {
         DialogBox db = new DialogBox(text, img);
         db.formatAsUser();
         return db;
     }
 
-    /**
-     * Creates a bot dialog box (left-aligned).
-     *
-     * @param text The text to display.
-     * @param img  The bot's avatar image.
-     * @return A DialogBox representing the bot message.
-     */
     public static DialogBox getShinchanDialog(String text, Image img) {
         DialogBox db = new DialogBox(text, img);
         db.formatAsBot();
         return db;
     }
 
-    /**
-     * Creates an error dialog box (left-aligned, highlighted).
-     *
-     * @param text The error text to display.
-     * @param img  The bot's avatar image.
-     * @return A DialogBox representing an error message.
-     */
     public static DialogBox getErrorDialog(String text, Image img) {
         DialogBox db = new DialogBox("⚠ " + text, img);
         db.formatAsError();
