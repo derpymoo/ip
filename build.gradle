@@ -31,6 +31,12 @@ application {
     mainClass.set("shinchan.Launcher")
 }
 
+shadowJar {
+    archiveBaseName.set("shinchan")
+    archiveVersion.set("")     // removes version from filename
+    archiveClassifier.set("")  // removes "-all"
+}
+
 jar {
     archiveBaseName = 'shinchan'
     archiveVersion = '0.1'
