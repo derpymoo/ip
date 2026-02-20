@@ -32,6 +32,8 @@ public class Shinchan {
             "Invalid task number.";
     private static final String MESSAGE_TODO_EMPTY =
             "The description of a todo cannot be empty.";
+    private static final String MESSAGE_DEADLINE_MISSING_DESC =
+            "Missing description before '/by'. Format: deadline <description> /by <yyyy-MM-dd HHmm>";
     private static final String MESSAGE_DEADLINE_EMPTY =
             "The description of a deadline cannot be empty.";
     private static final String MESSAGE_DEADLINE_MISSING_BY =
@@ -220,18 +222,21 @@ public class Shinchan {
     }
 
     private void handleDeadline(String input) throws ShinchanException {
-        if (!input.contains(" /by ")) {
+        String remainder = Parser.getRemainder(input);
+
+        int byIndex = remainder.indexOf("/by");
+        if (byIndex == -1) {
             throw new ShinchanException(MESSAGE_DEADLINE_MISSING_BY);
         }
 
-        String remainder = Parser.getRemainder(input);
-        String[] parts = remainder.split(" /by ", 2);
-
-        String description = parts[0].trim();
-        String by = parts[1].trim();
+        String description = remainder.substring(0, byIndex).trim();
+        String by = remainder.substring(byIndex + "/by".length()).trim();
 
         if (description.isEmpty()) {
-            throw new ShinchanException(MESSAGE_DEADLINE_EMPTY);
+            throw new ShinchanException(MESSAGE_DEADLINE_MISSING_DESC);
+        }
+        if (by.isEmpty()) {
+            throw new ShinchanException(MESSAGE_DATE_TIME_BAD);
         }
 
         LocalDateTime dueDateTime = Parser.parseDateTime(by, MESSAGE_DATE_TIME_BAD);
@@ -243,22 +248,33 @@ public class Shinchan {
 
     private void handleEvent(String input) throws ShinchanException {
         String remainder = Parser.getRemainder(input);
-        if (!remainder.contains("/from") || !remainder.contains("/to")) {
+
+        int fromIndex = remainder.indexOf("/from");
+        int toIndex = remainder.indexOf("/to");
+
+        if (fromIndex == -1 || toIndex == -1) {
             throw new ShinchanException(MESSAGE_EVENT_MISSING_TIME);
         }
 
-        String[] fromParts = remainder.split("/from", 2);
+        if (toIndex < fromIndex) {
+            // e.g. "event ... /to ... /from ..."
+            throw new ShinchanException(MESSAGE_EVENT_MISSING_TIME);
+        }
 
-        String description = fromParts[0].trim();
+        String description = remainder.substring(0, fromIndex).trim();
         if (description.isEmpty()) {
             throw new ShinchanException(MESSAGE_EVENT_EMPTY);
         }
 
-        String timing = fromParts[1].trim();
-        String[] toParts = timing.split("/to", 2);
+        String startString = remainder.substring(fromIndex + "/from".length(), toIndex).trim();
+        String endString = remainder.substring(toIndex + "/to".length()).trim();
 
-        LocalDateTime start = Parser.parseDateTime(toParts[0].trim(), MESSAGE_DATE_TIME_BAD);
-        LocalDateTime end = Parser.parseDateTime(toParts[1].trim(), MESSAGE_DATE_TIME_BAD);
+        if (startString.isEmpty() || endString.isEmpty()) {
+            throw new ShinchanException(MESSAGE_EVENT_MISSING_TIME); // or MESSAGE_DATE_TIME_BAD if you prefer
+        }
+
+        LocalDateTime start = Parser.parseDateTime(startString, MESSAGE_DATE_TIME_BAD);
+        LocalDateTime end = Parser.parseDateTime(endString, MESSAGE_DATE_TIME_BAD);
 
         Task task = new Events(description, start, end);
         tasks.add(task);
